@@ -65,8 +65,23 @@ export class ItemsService {
     return item;
   }
 
-  findAll(): Item[] {
-    return this.items;
+  findAll(filters?: { completed?: boolean; q?: string }): Item[] {
+    let result = this.items;
+
+    if (filters?.completed !== undefined) {
+      result = result.filter((item) => item.completed === filters.completed);
+    }
+
+    if (filters?.q) {
+      const query = filters.q.toLowerCase();
+      result = result.filter(
+        (item) =>
+          item.name.toLowerCase().includes(query) ||
+          item.description?.toLowerCase().includes(query),
+      );
+    }
+
+    return result;
   }
 
   getStats() {

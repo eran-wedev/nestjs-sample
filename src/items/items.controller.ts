@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
@@ -25,8 +26,17 @@ export class ItemsController {
   }
 
   @Get()
-  findAll(): Item[] {
-    return this.itemsService.findAll();
+  findAll(
+    @Query('completed') completed?: string,
+    @Query('q') q?: string,
+  ): Item[] {
+    const completedFilter =
+      completed === 'true' ? true : completed === 'false' ? false : undefined;
+
+    return this.itemsService.findAll({
+      completed: completedFilter,
+      q: q?.trim() || undefined,
+    });
   }
 
   @Get('stats')
