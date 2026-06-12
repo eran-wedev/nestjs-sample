@@ -226,6 +226,34 @@ export const dashboardPage = `<!DOCTYPE html>
 
     .empty { text-align: center; color: var(--muted); padding: 2rem; }
 
+    .filter-bar {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-group { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+    .filter-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.45rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 500;
+    }
+
+    .filter-btn.active {
+      background: rgba(108, 92, 231, 0.18);
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .search-input { flex: 1; min-width: 180px; }
+
     .toast {
       position: fixed;
       bottom: 1.5rem;
@@ -288,6 +316,14 @@ export const dashboardPage = `<!DOCTYPE html>
 
     <div class="panel">
       <h2>All items</h2>
+      <div class="filter-bar">
+        <div class="filter-group" id="filter-group">
+          <button type="button" class="filter-btn active" data-filter="all">All</button>
+          <button type="button" class="filter-btn" data-filter="pending">Pending</button>
+          <button type="button" class="filter-btn" data-filter="done">Done</button>
+        </div>
+        <input class="search-input" id="search-input" type="search" placeholder="Search items..." maxlength="100" />
+      </div>
       <div class="items-list" id="items-list"></div>
     </div>
   </div>
@@ -297,6 +333,9 @@ export const dashboardPage = `<!DOCTYPE html>
   <script>
     const toast = document.getElementById('toast');
     let toastTimer;
+    let currentFilter = 'all';
+    let searchQuery = '';
+    let searchTimer;
 
     function showToast(msg) {
       toast.textContent = msg;
