@@ -62,11 +62,11 @@ export class ItemsService {
     };
 
     this.items.push(item);
-    return item;
+    return { ...item };
   }
 
   findAll(filters?: { completed?: boolean; q?: string }): Item[] {
-    let result = this.items;
+    let result: Item[] = [...this.items];
 
     if (filters?.completed !== undefined) {
       result = result.filter((item) => item.completed === filters.completed);
@@ -81,7 +81,7 @@ export class ItemsService {
       );
     }
 
-    return result;
+    return result.map((item) => ({ ...item }));
   }
 
   getStats() {
@@ -122,19 +122,13 @@ export class ItemsService {
   }
 
   findOne(id: number): Item {
-    const item = this.items.find((entry) => entry.id === id);
-
-    if (!item) {
-      throw new NotFoundException(`Item #${id} not found`);
-    }
-
-    return item;
+    return { ...this.findOneOrFail(id) };
   }
 
   update(id: number, updateItemDto: UpdateItemDto): Item {
-    const item = this.findOne(id);
+    const item = this.findOneOrFail(id);
     Object.assign(item, updateItemDto);
-    return item;
+    return { ...item };
   }
 
   remove(id: number): Item {
@@ -145,6 +139,16 @@ export class ItemsService {
     }
 
     const [removed] = this.items.splice(index, 1);
-    return removed;
+    return { ...removed };
+  }
+
+  private findOneOrFail(id: number): Item {
+    const item = this.items.find((entry) => entry.id === id);
+
+    if (!item) {
+      throw new NotFoundException(`Item #${id} not found`);
+    }
+
+    return item;
   }
 }

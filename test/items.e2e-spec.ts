@@ -67,6 +67,43 @@ describe('Items (e2e)', () => {
       });
   });
 
+  it('GET /items?completed=true&q=nestjs applies both filters', () => {
+    return request(app.getHttpServer())
+      .get('/items?completed=true&q=nestjs')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.length).toBeGreaterThan(0);
+        expect(body.every((item: { completed: boolean }) => item.completed)).toBe(
+          true,
+        );
+      });
+  });
+
+  it('POST /items rejects whitespace-only names', () => {
+    return request(app.getHttpServer())
+      .post('/items')
+      .send({ name: '   ' })
+      .expect(400);
+  });
+
+  it('POST /items rejects unknown fields', () => {
+    return request(app.getHttpServer())
+      .post('/items')
+      .send({ name: 'Valid', hackerField: true })
+      .expect(400);
+  });
+
+  it('GET /items/:id returns 404 for missing items', () => {
+    return request(app.getHttpServer()).get('/items/9999').expect(404);
+  });
+
+  it('PATCH /items/:id returns 404 for missing items', () => {
+    return request(app.getHttpServer())
+      .patch('/items/9999')
+      .send({ completed: true })
+      .expect(404);
+  });
+
   it('POST /items creates an item', async () => {
     const response = await request(app.getHttpServer())
       .post('/items')

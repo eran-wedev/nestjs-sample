@@ -336,6 +336,7 @@ export const dashboardPage = `<!DOCTYPE html>
     let currentFilter = 'all';
     let searchQuery = '';
     let searchTimer;
+    let refreshId = 0;
 
     function showToast(msg) {
       toast.textContent = msg;
@@ -429,30 +430,50 @@ export const dashboardPage = `<!DOCTYPE html>
       return d.innerHTML;
     }
 
+    async function fetchJson(url) {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Request failed: ' + response.status);
+      }
+      return response.json();
+    }
+
     async function refresh() {
+      const id = ++refreshId;
       const [items, stats] = await Promise.all([
-        fetch(itemsUrl()).then(r => r.json()),
-        fetch('/items/stats').then(r => r.json()),
+        fetchJson(itemsUrl()),
+        fetchJson('/items/stats'),
       ]);
+      if (id !== refreshId) return;
       renderStats(stats);
       renderItems(items);
     }
 
     async function toggleItem(id, row) {
       const done = !row.querySelector('.checkbox').classList.contains('checked');
-      await fetch('/items/' + id, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ completed: done }),
-      });
-      showToast(done ? 'Marked complete ✓' : 'Marked pending');
-      await refresh();
+      try {
+        const response = await fetch('/items/' + id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ completed: done }),
+        });
+        if (!response.ok) throw new Error('Update failed');
+        showToast(done ? 'Marked complete ✓' : 'Marked pending');
+        await refresh();
+      } catch {
+        showToast('Could not update item');
+      }
     }
 
     async function deleteItem(id) {
-      await fetch('/items/' + id, { method: 'DELETE' });
-      showToast('Item deleted');
-      await refresh();
+      try {
+        const response = await fetch('/items/' + id, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Delete failed');
+        showToast('Item deleted');
+        await refresh();
+      } catch {
+        showToast('Could not delete item');
+      }
     }
 
     document.getElementById('filter-group').addEventListener('click', (e) => {
@@ -475,14 +496,19 @@ export const dashboardPage = `<!DOCTYPE html>
       const fd = new FormData(e.target);
       const name = fd.get('name').trim();
       if (!name) return;
-      await fetch('/items', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, description: fd.get('description')?.trim() || undefined }),
-      });
-      e.target.reset();
-      showToast('Item added!');
-      await refresh();
+      try {
+        const response = await fetch('/items', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, description: fd.get('description')?.trim() || undefined }),
+        });
+        if (!response.ok) throw new Error('Create failed');
+        e.target.reset();
+        showToast('Item added!');
+        await refresh();
+      } catch {
+        showToast('Could not add item');
+      }
     });
 
     refresh().catch(err => {
