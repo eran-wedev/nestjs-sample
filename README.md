@@ -28,7 +28,7 @@ Default port is `3000`. Override with the `PORT` environment variable.
 |--------|------|-------------|
 | `GET` | `/` | Interactive dashboard (HTML) |
 | `GET` | `/api` | API welcome message and endpoint list |
-| `GET` | `/items` | List all items |
+| `GET` | `/items` | List items (`?completed=true\|false`, `?q=search`) |
 | `GET` | `/items/stats` | Aggregated stats for charts |
 | `GET` | `/items/:id` | Get a single item |
 | `POST` | `/items` | Create an item |

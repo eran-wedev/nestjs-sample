@@ -6,7 +6,8 @@ export class AppService {
         dashboard: 'GET /',
         health: 'GET /api',
         items: {
-          list: 'GET /items',
+          list: 'GET /items?completed=&q=',
+          stats: 'GET /items/stats',
           get: 'GET /items/:id',
           create: 'POST /items',
           update: 'PATCH /items/:id',
