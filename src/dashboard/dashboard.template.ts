@@ -386,10 +386,22 @@ export const dashboardPage = `<!DOCTYPE html>
       });
     }
 
+    function itemsUrl() {
+      const params = new URLSearchParams();
+      if (currentFilter === 'pending') params.set('completed', 'false');
+      if (currentFilter === 'done') params.set('completed', 'true');
+      if (searchQuery) params.set('q', searchQuery);
+      const query = params.toString();
+      return query ? '/items?' + query : '/items';
+    }
+
     function renderItems(items) {
       const list = document.getElementById('items-list');
       if (!items.length) {
-        list.innerHTML = '<div class="empty">No items yet — add one above!</div>';
+        const filtered = currentFilter !== 'all' || searchQuery;
+        list.innerHTML = '<div class="empty">' +
+          (filtered ? 'No items match your filters.' : 'No items yet — add one above!') +
+          '</div>';
         return;
       }
       list.innerHTML = items.map(item => \`
@@ -419,7 +431,7 @@ export const dashboardPage = `<!DOCTYPE html>
 
     async function refresh() {
       const [items, stats] = await Promise.all([
-        fetch('/items').then(r => r.json()),
+        fetch(itemsUrl()).then(r => r.json()),
         fetch('/items/stats').then(r => r.json()),
       ]);
       renderStats(stats);
@@ -442,6 +454,21 @@ export const dashboardPage = `<!DOCTYPE html>
       showToast('Item deleted');
       await refresh();
     }
+
+    document.getElementById('filter-group').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-filter]');
+      if (!btn) return;
+      currentFilter = btn.dataset.filter;
+      document.querySelectorAll('.filter-btn').forEach(el => el.classList.remove('active'));
+      btn.classList.add('active');
+      refresh();
+    });
+
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      searchQuery = e.target.value.trim();
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(refresh, 250);
+    });
 
     document.getElementById('add-form').addEventListener('submit', async (e) => {
       e.preventDefault();
